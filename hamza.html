@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khadija Valentine</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Pacifico&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    touch-action: manipulation;
+  }
+
+  .card {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    z-index: 5;
+    width: 320px;
+  }
+
+  h1 { font-family: 'Pacifico', cursive; color: #ff4d6d; font-size: 36px; margin: 0 0 10px 0; }
+  p { color: #666; margin-bottom: 25px; font-size: 18px; }
+
+  #yes { 
+    background: #ff4d6d; color: white; border: none; padding: 12px 30px; 
+    border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  #no { 
+    background: #e0e0e0; color: #555; border: none; padding: 12px 30px; 
+    border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; 
+    position: absolute; z-index: 100;
+  }
+
+  #floating-msg {
+    position: fixed;
+    width: 160px;
+    background: white;
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 101;
+    transform: translate(-50%, -100%);
+    transition: opacity 0.2s;
+  }
+
+  #floating-msg img { width: 100%; border-radius: 8px; }
+  #floating-msg p { font-size: 13px; color: #ff4d6d; font-weight: bold; margin: 5px 0 0 0; }
+
+  .final-screen { 
+    display: none; flex-direction: column; align-items: center; justify-content: center; 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: white; z-index: 200; 
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <h1>Khadija</h1>
+  <p>Will you be my Valentine?</p>
+  <button id="yes">YES</button>
+  <button id="no" style="left: 55%; top: 58%;">NO</button>
+</div>
+
+<div id="floating-msg">
+  <img id="float-gif" src="" alt="reaction">
+  <p id="float-text"></p>
+</div>
+
+<div class="final-screen" id="final-screen">
+  <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJueGZueGZueGZueGZueGZueGZueGZueGZueGZueGZueGZueGZueCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/MDJ9IbxxvDUQM/giphy.gif" width="250">
+  <h1 style="font-size: 45px; margin-top: 20px;">Officially Mine! ❤️</h1>
+</div>
+
+<script>
+  const reactions = [
+    { t: "Are you sure?", g: "https://media.giphy.com/media/bjB3gtFvREqqr5NAHW/giphy.gif" },
+    { t: "Really sure??", g: "https://media0.giphy.com/media/oOTTyHRHj0HYY/giphy.gif" },
+    { t: "Think about it again!", g: "https://media3.giphy.com/media/pLcgO003rbeo0/giphy.gif" },
+    { t: "I'll be so sad...", g: "https://media.giphy.com/media/P53TSsopKicrm/giphy.gif" },
+    { t: "You're breaking my heart", g: "https://media.giphy.com/media/7ycl4jNeyCn2U/giphy.gif" },
+    { t: "I'm gonna cry...", g: "https://media.giphy.com/media/5diegjT56V0fuAWNKT/giphy.gif" },
+    { t: "Just say yes please!", g: "https://media.giphy.com/media/0CvRlvjgji60zW3UOi/giphy.gif" },
+    { t: "I'll give you chocolates!", g: "https://media.giphy.com/media/wTI6hkUqFn9OE/giphy.gif" },
+    { t: "Pleaseeee?", g: "https://media.giphy.com/media/zZbf6UpZslp3nvFjIR/giphy.gif" },
+    { t: "Don't be so mean!", g: "https://media.giphy.com/media/T4E8UoQ4CXZud4Dce9/giphy.gif" },
+    { t: "Look at my sad face", g: "https://media.giphy.com/media/98MaHVwJOmWMz4cz1K/giphy.gif" },
+    { t: "Okay, last chance!", g: "https://media.giphy.com/media/60M6up3EZEmXg7FJON/giphy.gif" },
+    { t: "I'm still waiting...", g: "https://media.giphy.com/media/um2kBnfo55iW4ZH1Fa/giphy.gif" }
+  ];
+
+  const noBtn = document.getElementById('no');
+  const yesBtn = document.getElementById('yes');
+  const floatMsg = document.getElementById('floating-msg');
+  const floatText = document.getElementById('float-text');
+  const floatGif = document.getElementById('float-gif');
+  let index = 0;
+
+  function moveNo() {
+    // Screen boundary check
+    const padding = 100;
+    const maxX = window.innerWidth - noBtn.offsetWidth - padding;
+    const maxY = window.innerHeight - noBtn.offsetHeight - padding;
+    
+    const x = Math.random() * (maxX - padding) + padding;
+    const y = Math.random() * (maxY - padding) + padding;
+
+    noBtn.style.left = x + "px";
+    noBtn.style.top = y + "px";
+
+    const data = reactions[index % reactions.length];
+    floatText.innerText = data.t;
+    floatGif.src = data.g;
+    index++;
+
+    floatMsg.style.left = x + "px";
+    floatMsg.style.top = (y - 10) + "px";
+    floatMsg.style.opacity = "1";
+  }
+
+  noBtn.addEventListener('mouseover', moveNo);
+  noBtn.addEventListener('click', moveNo);
+
+  yesBtn.onclick = () => {
+    document.getElementById('card').style.display = 'none';
+    floatMsg.style.display = 'none';
+    noBtn.style.display = 'none';
+    document.getElementById('final-screen').style.display = 'flex';
+
+    // Best Confetti & Flowers effect
+    var duration = 5 * 1000;
+    var animationEnd = Date.now() + duration;
+    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 300 };
+
+    function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+    var interval = setInterval(function() {
+      var timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) return clearInterval(interval);
+      var particleCount = 50 * (timeLeft / duration);
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    }, 250);
+  };
+</script>
+</body>
+</html>
